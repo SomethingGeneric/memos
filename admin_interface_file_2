@@ -1,0 +1,22 @@
+package server
+
+import (
+	"context"
+
+	"github.com/usememos/memos/plugin/discord"
+	"github.com/usememos/memos/store"
+)
+
+type discordHandler struct {
+	store *store.Store
+}
+
+func newDiscordHandler(store *store.Store) *discordHandler {
+	return &discordHandler{store: store}
+}
+
+func (d *discordHandler) BotToken(ctx context.Context) string {
+	return d.store.GetSystemSettingValueWithDefault(&ctx, apiv1.SystemSettingDiscordBotTokenName.String(), "")
+}
+
+// Implement other necessary functions and logic for interacting with Discord
