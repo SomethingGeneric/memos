@@ -1,0 +1,25 @@
+package server
+
+import (
+	"github.com/usememos/memos/plugin/messaging"
+)
+
+type discordHandler struct {
+	messenger messaging.Messenger
+}
+
+func newDiscordHandler(messenger messaging.Messenger) *discordHandler {
+	return &discordHandler{messenger: messenger}
+}
+
+func (d *discordHandler) MessageHandle(ctx context.Context, bot messaging.Bot, message messaging.Message, attachments []messaging.Attachment) error {
+	// Handle Discord message logic here
+}
+
+func (d *discordHandler) CallbackQueryHandle(ctx context.Context, bot messaging.Bot, callbackQuery messaging.CallbackQuery) error {
+	// Handle Discord callback query logic here
+}
+
+func generateKeyboardForMemoID(id int32) [][]messaging.InlineKeyboardButton {
+	// Generate Discord keyboard for memo ID logic here
+}

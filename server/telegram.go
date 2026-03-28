@@ -11,15 +11,17 @@ import (
 	"github.com/pkg/errors"
 	apiv1 "github.com/usememos/memos/api/v1"
 	"github.com/usememos/memos/plugin/telegram"
+	"github.com/usememos/memos/plugin/messaging"
 	"github.com/usememos/memos/store"
 )
 
 type telegramHandler struct {
-	store *store.Store
+	store     *store.Store
+	messenger messaging.Messenger
 }
 
-func newTelegramHandler(store *store.Store) *telegramHandler {
-	return &telegramHandler{store: store}
+func newTelegramHandler(store *store.Store, messenger messaging.Messenger) *telegramHandler {
+	return &telegramHandler{store: store, messenger: messenger}
 }
 
 func (t *telegramHandler) BotToken(ctx context.Context) string {
@@ -31,7 +33,7 @@ const (
 	successMessage = "Success"
 )
 
-func (t *telegramHandler) MessageHandle(ctx context.Context, bot *telegram.Bot, message telegram.Message, attachments []telegram.Attachment) error {
+func (t *telegramHandler) MessageHandle(ctx context.Context, bot messaging.Bot, message messaging.Message, attachments []messaging.Attachment) error {
 	reply, err := bot.SendReplyMessage(ctx, message.Chat.ID, message.MessageID, workingMessage)
 	if err != nil {
 		return fmt.Errorf("Failed to SendReplyMessage: %s", err)
@@ -120,7 +122,7 @@ func (t *telegramHandler) MessageHandle(ctx context.Context, bot *telegram.Bot, 
 	return err
 }
 
-func (t *telegramHandler) CallbackQueryHandle(ctx context.Context, bot *telegram.Bot, callbackQuery telegram.CallbackQuery) error {
+func (t *telegramHandler) CallbackQueryHandle(ctx context.Context, bot messaging.Bot, callbackQuery messaging.CallbackQuery) error {
 	var memoID int32
 	var visibility store.Visibility
 	n, err := fmt.Sscanf(callbackQuery.Data, "%s %d", &visibility, &memoID)
@@ -146,23 +148,23 @@ func (t *telegramHandler) CallbackQueryHandle(ctx context.Context, bot *telegram
 	return bot.AnswerCallbackQuery(ctx, callbackQuery.ID, fmt.Sprintf("Success changing Memo %d to %s", memoID, visibility))
 }
 
-func generateKeyboardForMemoID(id int32) [][]telegram.InlineKeyboardButton {
+func generateKeyboardForMemoID(id int32) [][]messaging.InlineKeyboardButton {
 	allVisibility := []store.Visibility{
 		store.Public,
 		store.Protected,
 		store.Private,
 	}
 
-	buttons := make([]telegram.InlineKeyboardButton, 0, len(allVisibility))
+	buttons := make([]messaging.InlineKeyboardButton, 0, len(allVisibility))
 	for _, v := range allVisibility {
-		button := telegram.InlineKeyboardButton{
+		button := messaging.InlineKeyboardButton{
 			Text:         v.String(),
 			CallbackData: fmt.Sprintf("%s %d", v, id),
 		}
 		buttons = append(buttons, button)
 	}
 
-	return [][]telegram.InlineKeyboardButton{buttons}
+	return [][]messaging.InlineKeyboardButton{buttons}
 }
 
 func convertToMarkdown(text string, messageEntities []telegram.MessageEntity) string {
